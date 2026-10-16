@@ -1,0 +1,13 @@
+project-includes = [
+    "scripts",
+    "src",
+    "tests",
+]
+project-excludes = [
+    "**/node_modules",
+    "**/__pycache__",
+    "**/.*",
+    ".venv",
+]
+python-version = "3.11.0"
+infer-with-first-use = false

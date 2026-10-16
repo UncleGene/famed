@@ -1,0 +1,4 @@
+interface:
+  display_name: "Refresh Reference Cache"
+  short_description: "Refresh local medical reference datasets"
+  default_prompt: "Use $fm-refresh-reference-cache to refresh the local reference cache safely."

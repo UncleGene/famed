@@ -1,0 +1,25 @@
+{
+    "python-envs.defaultEnvManager": "ms-python.python:pyenv",
+    "python.analysis.extraPaths": ["scripts"],
+    "python.analysis.typeCheckingMode": "strict",
+    "python.analysis.diagnosticMode": "workspace",
+    "chat.tools.terminal.autoApprove": {
+        "pytest": true,
+        "sqlite3": true,
+        "/^python -m pytest\\b.*$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^python -m mypy\\b.*$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^python -m pytest\\b.*&& python -m mypy\\b.*$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "pyenv": true,
+        "git rev-parse": true,
+        "awk": true
+    }
+}
