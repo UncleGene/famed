@@ -1,0 +1,22 @@
+description = "Triage a correction or new direction and route it to the right docs or workflow."
+prompt = """
+Follow the famed project guide and current sources below. Use your host
+environment's planning, review, and validation workflows where they apply.
+
+Project guide:
+@{AGENTS.md}
+
+Current sources:
+@{docs/CORE.md}
+@{docs/REQUIREMENTS.md}
+@{docs/DECISIONS.md}
+@{docs/SYSTEM.md}
+@{docs/PLAN.md}
+
+Task:
+Classify the course correction, identify affected docs, code, and tests, and
+propose minimal safe edits. Ask a question only if safe action is blocked.
+
+User input:
+{{args}}
+"""

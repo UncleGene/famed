@@ -1,0 +1,13 @@
+# Keep Gemini CLI context scans focused on tracked project guidance and source.
+data/**
+famed-vault/**
+tmp/**
+.venv/**
+__pycache__/**
+*.db
+*.sqlite
+*.sqlite3
+*.pdf
+*.png
+*.jpg
+*.jpeg

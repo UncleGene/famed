@@ -1,0 +1,24 @@
+description = "Change an architecture decision and propagate its impact."
+prompt = """
+Follow the famed project guide and current sources below. Use your host
+environment's planning, review, and validation workflows where they apply.
+
+Project guide:
+@{AGENTS.md}
+
+Current sources:
+@{docs/CORE.md}
+@{docs/REQUIREMENTS.md}
+@{docs/DECISIONS.md}
+@{docs/SYSTEM.md}
+@{docs/PLAN.md}
+
+Task:
+Apply the requested decision change. Edit or replace the owning ADR so
+DECISIONS.md holds only current decisions (ADR-012). Update REQUIREMENTS links,
+SYSTEM, PLAN, procedures, skills, and code comments that cite it. Ask for
+confirmation before editing.
+
+User input:
+{{args}}
+"""

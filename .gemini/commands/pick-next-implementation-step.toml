@@ -1,0 +1,25 @@
+description = "Select the next cohesive implementation slice."
+prompt = """
+Follow the famed project guide and current sources below. Use your host
+environment's planning, review, and validation workflows where they apply.
+
+Project guide:
+@{AGENTS.md}
+
+Current sources:
+@{docs/CORE.md}
+@{docs/REQUIREMENTS.md}
+@{docs/DECISIONS.md}
+@{docs/SYSTEM.md}
+@{docs/PLAN.md}
+
+Task:
+Pick the next cohesive slice from PLAN.md that can be completed with tests and
+documentation updates in one pass. Output scope, non-scope, affected files,
+acceptance criteria, tests, and docs that must not be violated. Include the
+relevant nested Obsidian skill when the slice touches vault artifacts. Ask for
+confirmation before implementation starts.
+
+User input:
+{{args}}
+"""

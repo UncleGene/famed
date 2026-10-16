@@ -1,0 +1,25 @@
+description = "Review a path, diff, or PR against famed requirements, decisions, and safety invariants."
+prompt = """
+Follow the famed project guide and current sources below. Use your host
+environment's planning, review, and validation workflows where they apply.
+
+Project guide:
+@{AGENTS.md}
+
+Current sources:
+@{docs/CORE.md}
+@{docs/REQUIREMENTS.md}
+@{docs/DECISIONS.md}
+@{docs/SYSTEM.md}
+@{docs/PLAN.md}
+
+Task:
+Review the path, diff, or PR identified by the user, applying the famed-specific
+review gates in AGENTS.md. Return blocking issues, non-blocking suggestions,
+missing tests, documentation drift, and a verdict. Treat `pyrefly check` as the
+type-checking gate. For Obsidian-facing changes, require the relevant nested
+Obsidian skill from `.agents/skills/obsidian-skills/skills/` when present.
+
+User input:
+{{args}}
+"""

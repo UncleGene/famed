@@ -1,0 +1,28 @@
+description = "Design an ingestion or role-boundary contract."
+prompt = """
+Follow the famed project guide and current sources below. Use your host
+environment's planning, review, and validation workflows where they apply.
+
+Project guide:
+@{AGENTS.md}
+
+Domain skills:
+@{.agents/skills/ingestion-architect/SKILL.md}
+@{.agents/skills/data-contract-designer/SKILL.md}
+
+Current sources:
+@{docs/CORE.md}
+@{docs/REQUIREMENTS.md}
+@{docs/DECISIONS.md}
+@{docs/SYSTEM.md}
+@{docs/PLAN.md}
+
+Task:
+Design the ingestion contract requested by the user. Include role
+responsibilities, schema shape, confidence/provenance fields, validation rules,
+quarantine outcomes, examples, and tests. Ask for confirmation before
+implementation starts.
+
+User input:
+{{args}}
+"""

@@ -1,0 +1,14 @@
+# Keep local medical data and generated artifacts out of Gemini Code Assist
+# Enterprise code customization indexes.
+data/**
+famed-vault/**
+tmp/**
+.venv/**
+__pycache__/**
+*.db
+*.sqlite
+*.sqlite3
+*.pdf
+*.png
+*.jpg
+*.jpeg
