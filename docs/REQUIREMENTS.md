@@ -771,7 +771,9 @@ with a clinician, with recency filters that suppress stale items.
 
 **Behavior:**
 - Sections and rules as defined in ADR-030: Out of Range (with Newly / Other
-  split), Trending, Recently Normalized, and Coronary Calcium.
+  split and a Not Re-checked group for out-of-range results 180 days to 2 years
+  old that were never re-measured), Trending, Recently Normalized, and Coronary
+  Calcium.
 - Built from the same `build_lab_trends_from_db` data as `lab-results.md`;
   `lab-results.md` links this report rather than repeating its rows.
 - The health advisory's lab observations use the same flagged-row filter.
@@ -782,8 +784,10 @@ of Range. | ALT rising 30 → 38 U/L against 0–40 → Trending; falling 39 →
 not. | Upper-only reference 100 with a value of 90 rising → Trending; a value of
 60 → not. | Previous out of range, latest in range → Recently Normalized. | A
 POCT dipstick visit after a lipid panel → does not move the recency anchor. |
-Cholesterol 255 mg/dL against an upper-only bound of 200 → Out of Range. | Test
-measured three years ago → excluded.
+Cholesterol 255 mg/dL against an upper-only bound of 200 → Out of Range. | LDL
+above range one year before the latest draw and not measured since → Not
+Re-checked, with its date, and a re-check prompt in the advisory. | Test measured
+three years ago → excluded.
 
 **Acceptance:** Exists for every person with labs. Single-sided ranges are
 classified by their one bound. Trending never duplicates Out of Range. SVG date

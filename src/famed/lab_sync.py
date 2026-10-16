@@ -69,6 +69,9 @@ class InferredLoincRepair:
 
 _COMPACT_TEST_NAME_RE = re.compile(r"[\s,]+")
 _FLAGGED_OUT_OF_RANGE_WINDOW_DAYS = 180
+# Out-of-range results older than the window above but within this one are
+# shown as "not re-checked" rather than hidden (ADR-030).
+_FLAGGED_NOT_RECHECKED_WINDOW_DAYS = 730
 _CAC_DESCRIPTION_TERMS: tuple[str, ...] = ("agatston", "coronary calcium", "calcium score", "cac ")
 
 # Canonical display labels are normalized against current NLM Clinical Tables / LOINC naming
@@ -3310,6 +3313,31 @@ def _filter_flagged_lab_rows(
     return out_of_range, trending, normalized, newly_out_of_range, other_out_of_range
 
 
+def _not_rechecked_lab_rows(trend_rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Out-of-range results past the recency window but not measured since (ADR-030).
+
+    Older results stay out of Out of Range so recent problems lead, but they are
+    not hidden while they remain the latest reading; only results older than
+    ``_FLAGGED_NOT_RECHECKED_WINDOW_DAYS`` are dropped.
+    """
+    anchor = _most_recent_panel_date(trend_rows)
+    return sorted(
+        (
+            r
+            for r in trend_rows
+            if r["in_range_latest"] is False
+            and _is_out_of_range_result_stale(r, anchor)
+            and not _is_out_of_range_result_stale(
+                r, anchor, window_days=_FLAGGED_NOT_RECHECKED_WINDOW_DAYS
+            )
+        ),
+        key=_severity_order,
+    )
+
+
+_NOT_RECHECKED_DATE_SUFFIX = " (not re-checked since)"
+
+
 def build_lab_observations_for_advisory(trend_rows: list[dict[str, Any]]) -> list[str]:
     """Build lab observation bullet lines for the health advisory.
 
@@ -3317,8 +3345,11 @@ def build_lab_observations_for_advisory(trend_rows: list[dict[str, Any]]) -> lis
     Lab Observations section entirely rather than showing a "no findings" stub.
     """
     out_of_range, trending, normalized, _, _ = _filter_flagged_lab_rows(trend_rows)
-    # Out-of-range first (furthest from range first), then trending, then normalized.
-    flagged = [*out_of_range, *trending, *normalized]
+    not_rechecked = _not_rechecked_lab_rows(trend_rows)
+    not_rechecked_keys = {str(row["test_name"]).casefold() for row in not_rechecked}
+    # Out-of-range first (furthest from range first), then older out-of-range results
+    # not re-checked since, then trending, then normalized.
+    flagged = [*out_of_range, *not_rechecked, *trending, *normalized]
     lines: list[str] = []
     seen: set[str] = set()
     for row in flagged:
@@ -3338,6 +3369,8 @@ def build_lab_observations_for_advisory(trend_rows: list[dict[str, Any]]) -> lis
         previous = _previous_numeric_value(row)
         observed_date = str(latest.get("date") or "")[:10]
         previous_suffix = f" · **Previous:** {previous}" if previous and previous != "—" else ""
+        if observed_date and key in not_rechecked_keys:
+            observed_date += _NOT_RECHECKED_DATE_SUFFIX
         date_suffix = f" · **Date:** {observed_date}" if observed_date else ""
         lines.append(
             f"- **{row['test_name']}** — **Latest:** {value_str}"
@@ -3361,6 +3394,16 @@ def build_lab_discussion_prompts(trend_rows: list[dict[str, Any]], *, limit: int
             f"- Ask about {row['test_name']}: {latest['value']}{unit} is outside the "
             f"reference range ({ref_range}{previous_text})."
         )
+    for row in _not_rechecked_lab_rows(trend_rows)[: max(limit - len(prompts), 0)]:
+        latest = row["readings"][-1]
+        unit = f" {latest['unit']}" if latest.get("unit") else ""
+        ref_range = _format_reference_range(latest.get("ref_low"), latest.get("ref_high"))
+        observed_date = str(latest.get("date") or "")[:10]
+        prompts.append(
+            f"- Ask whether {row['test_name']} should be re-checked: {latest['value']}{unit} "
+            f"was outside the reference range ({ref_range}) on {observed_date} and has not "
+            "been measured since."
+        )
     return prompts
 
 
@@ -3383,6 +3426,7 @@ def render_flagged_for_discussion_report(
     out_of_range, trending, normalized, newly_out_of_range, other_out_of_range = (
         _filter_flagged_lab_rows(trend_rows)
     )
+    not_rechecked = _not_rechecked_lab_rows(trend_rows)
 
     lines: list[str] = [
         f"---\n{yaml_block}\n---\n",
@@ -3402,6 +3446,14 @@ def render_flagged_for_discussion_report(
         lines.extend(_render_lab_visual_section(out_of_range))
     else:
         lines.append("_No out-of-range lab results in recent panels._\n")
+    if not_rechecked:
+        lines.append("### Not Re-checked\n")
+        lines.append(
+            "_Out of range at the last measurement, which is more than "
+            f"{_FLAGGED_OUT_OF_RANGE_WINDOW_DAYS} days older than the latest lab draw; "
+            "not measured since._\n"
+        )
+        lines.extend(_render_lab_visual_section(not_rechecked))
 
     lines.append("## Trending\n")
     if trending:

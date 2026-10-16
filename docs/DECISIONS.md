@@ -656,7 +656,8 @@ Status: accepted | Related REQs: REQ-014, REQ-016
    marked `synthesis_status: stale` with its `generated_at`. Synthesis older than
    30 days, or contradicted by newer canonical facts, renders under a prominent
    dated warning.
-7. Synthesis attaches to the health advisory and the doctor-visit packet.
+7. Synthesis lives in the health advisory only. The doctor-visit packet stays a
+   facts-only document (ADR-031) and links the advisory.
 
 ### Consequences
 - Advice reports gain an additive synthesis section; deterministic sections are
@@ -734,6 +735,10 @@ Status: accepted | Related REQs: REQ-008, REQ-016, REQ-025
   that anchor ignores point-of-care (`POCT…`) tests. Splits into **Newly Out of
   Range** (previous reading in range) and **Other Out of Range** when any newly
   out-of-range result exists.
+- **Not Re-checked** (part of Out of Range): results whose latest reading is out
+  of range and falls 180 days to 2 years before the most recent draw. They are
+  listed after current results with their date, because an abnormal result that
+  was never re-measured must not disappear. Older results are excluded.
 - **Trending:** latest value still in range, moving toward a nearby bound,
   within the 2 most recent distinct panel dates. "Nearby" is 10% of the range
   width, or 10% of a single bound's magnitude. Tests without a bound are
@@ -751,8 +756,9 @@ reference range.
 The health advisory and this report share `build_lab_trends_from_db` and one
 flagged-row filter; neither parses the other's Markdown.
 
-Thresholds (180 days, 10%, two panel dates) are implementation constants, not
-user settings.
+Thresholds (180 days, 2 years, 10%, two panel dates) are implementation
+constants, not user settings. The advisory marks Not Re-checked results as
+"not re-checked since" and turns them into re-check discussion prompts.
 
 ---
 

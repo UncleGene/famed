@@ -4973,10 +4973,9 @@ def test_reprocess_history_source_removes_stale_immunization_placeholder() -> No
         assert not placeholder_path.exists()
         assert not immunization_note.exists()
         assert conn.execute("SELECT COUNT(*) FROM immunizations").fetchone() == (0,)
-        report_text = (
+        assert not (
             vault_root / "Records" / "dummy_alice" / "Reports" / "immunizations.md"
-        ).read_text(encoding="utf-8")
-        assert "_No immunizations recorded._" in report_text
+        ).exists()
 
 
 def test_ccda_immunization_mapping_strips_embedded_date_lists() -> None:
@@ -6506,3 +6505,21 @@ def test_identical_history_events_on_three_or_more_dates_roll_up(tmp_path: Path)
     )
     # Two mentions stay individually dated.
     assert content.count("Gross hematuria") == 2
+
+
+def test_history_digest_chronic_label_matches_osteoporosis_diagnosis_not_screening() -> None:
+    assert (
+        _history_digest_chronic_label(
+            {
+                "category": "diagnosis",
+                "description": "Age-related osteoporosis without current pathological fracture",
+            }
+        )
+        == "Osteoporosis"
+    )
+    assert (
+        _history_digest_chronic_label(
+            {"category": "screening", "description": "Screening for osteoporosis"}
+        )
+        is None
+    )

@@ -53,6 +53,8 @@ from famed.lab_sync import (
     backfill_lab_units_in_db,
     backfill_reviewed_inferred_loinc_codes,
     build_lab_conflicts_from_db,
+    build_lab_discussion_prompts,
+    build_lab_observations_for_advisory,
     build_lab_trends_from_db,
     build_latest_lab_results_from_notes,
     classify_loinc_code_origin,
@@ -9220,3 +9222,58 @@ def test_backfill_repairs_unit_contradicting_inferred_codes_only() -> None:
         "source-glucose": "14749-6",
     }
     assert backfill_reviewed_inferred_loinc_codes(conn) == []
+
+
+def _single_reading_row(test_name: str, observed: str, value: float, *, in_range: bool) -> dict:
+    return _flagged_row(
+        test_name,
+        [
+            {
+                "date": observed,
+                "value": value,
+                "unit": "mg/dL",
+                "ref_low": 0.0,
+                "ref_high": 99.0,
+            }
+        ],
+        trend=None,
+        in_range_latest=in_range,
+    )
+
+
+def test_out_of_range_result_past_window_is_shown_as_not_rechecked() -> None:
+    """ADR-030: an old abnormal result that was never re-measured is not hidden."""
+    rows = [
+        _single_reading_row("Glucose", "2024-02-01", 90.0, in_range=True),
+        _single_reading_row("LDL Calculated", "2023-03-01", 209.0, in_range=False),
+        _single_reading_row("Triglycerides", "2021-01-01", 300.0, in_range=False),
+    ]
+
+    report = render_flagged_for_discussion_report("dummy_alice", rows)
+    out_of_range = report.split("## Out of Range", 1)[1].split("## Trending", 1)[0]
+    assert "_No out-of-range lab results in recent panels._" in out_of_range
+    not_rechecked = out_of_range.split("### Not Re-checked", 1)[1]
+    assert "LDL Calculated" in not_rechecked
+    # Older than two years before the latest draw: still excluded.
+    assert "Triglycerides" not in report
+
+    observations = build_lab_observations_for_advisory(rows)
+    assert len(observations) == 1
+    assert "**LDL Calculated**" in observations[0]
+    assert "**Date:** 2023-03-01 (not re-checked since)" in observations[0]
+
+    prompts = build_lab_discussion_prompts(rows)
+    assert prompts == [
+        "- Ask whether LDL Calculated should be re-checked: 209.0 mg/dL was outside the "
+        "reference range (0.0–99.0) on 2023-03-01 and has not been measured since."
+    ]
+
+
+def test_not_rechecked_group_absent_when_old_result_is_in_range() -> None:
+    rows = [
+        _single_reading_row("Glucose", "2024-02-01", 90.0, in_range=True),
+        _single_reading_row("LDL Calculated", "2023-03-01", 80.0, in_range=True),
+    ]
+    report = render_flagged_for_discussion_report("dummy_alice", rows)
+    assert "### Not Re-checked" not in report
+    assert build_lab_observations_for_advisory(rows) == []

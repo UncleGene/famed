@@ -85,17 +85,20 @@ def test_persist_immunization_rows_writes_note_rows_and_report(tmp_path: Path) -
     assert "report_type: immunizations" in report_path.read_text(encoding="utf-8")
 
 
-def test_write_immunizations_report_renders_empty_state(tmp_path: Path) -> None:
+def test_write_immunizations_report_removes_report_without_immunizations(
+    tmp_path: Path,
+) -> None:
+    """Inputs-only generation (ADR-031): no immunizations, no report."""
     conn = sqlite3.connect(":memory:")
     conn.executescript(SCHEMA_SQL)
     vault_root = tmp_path / "vault"
+    reports_dir = vault_root / "Records" / "dummy_alice" / "Reports"
+    reports_dir.mkdir(parents=True)
+    stale = reports_dir / "immunizations.md"
+    stale.write_text("---\nreport_type: immunizations\n---\n", encoding="utf-8")
 
-    report_path = write_immunizations_report(vault_root, "dummy_alice", conn)
-
-    assert report_path == vault_root / "Records" / "dummy_alice" / "Reports" / "immunizations.md"
-    content = report_path.read_text(encoding="utf-8")
-    assert "report_type: immunizations" in content
-    assert "_No immunizations recorded._" in content
+    assert write_immunizations_report(vault_root, "dummy_alice", conn) is None
+    assert not stale.exists()
 
 
 def test_persist_immunization_rows_deduplicates_same_event_across_sources(tmp_path: Path) -> None:

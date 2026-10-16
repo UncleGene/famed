@@ -472,10 +472,23 @@ def write_immunizations_report(
     vault_root: Path,
     person_id: str,
     conn: sqlite3.Connection,
-) -> Path:
+) -> Path | None:
+    """Write immunizations.md, or remove it when the person has none (ADR-031)."""
     person_reports_dir = vault_root / "Records" / person_id / "Reports"
-    person_reports_dir.mkdir(parents=True, exist_ok=True)
+    report_path = person_reports_dir / "immunizations.md"
     rows = _query_immunization_rows(conn, person_id)
+    if not rows:
+        report_path.unlink(missing_ok=True)
+        if person_reports_dir.is_dir():
+            write_category_index_note(
+                person_reports_dir,
+                person_id,
+                "Reports",
+                note_label="report",
+                display_name=load_person_display_name(vault_root, person_id),
+            )
+        return None
+    person_reports_dir.mkdir(parents=True, exist_ok=True)
     front_matter: dict[str, Any] = {
         "person_id": person_id,
         "record_type": "report",
@@ -483,29 +496,25 @@ def write_immunizations_report(
         "generated_at": datetime.now(UTC).date().isoformat(),
     }
     yaml_block = yaml.safe_dump(front_matter, sort_keys=False, allow_unicode=False).strip()
-    if not rows:
-        table = "_No immunizations recorded._\n"
-    else:
-        table_rows = [
-            "| vaccine_name | administered_date | status | cvx_code | lot_number |",
-            "| --- | --- | --- | --- | --- |",
-        ]
-        for row in rows:
-            table_rows.append(
-                "| "
-                + " | ".join(
-                    [
-                        _markdown_table_cell(row.get("vaccine_name")),
-                        _markdown_table_cell(row.get("administered_date")),
-                        _markdown_table_cell(row.get("status")),
-                        _markdown_table_cell(row.get("cvx_code")),
-                        _markdown_table_cell(row.get("lot_number")),
-                    ]
-                )
-                + " |"
+    table_rows = [
+        "| vaccine_name | administered_date | status | cvx_code | lot_number |",
+        "| --- | --- | --- | --- | --- |",
+    ]
+    for row in rows:
+        table_rows.append(
+            "| "
+            + " | ".join(
+                [
+                    _markdown_table_cell(row.get("vaccine_name")),
+                    _markdown_table_cell(row.get("administered_date")),
+                    _markdown_table_cell(row.get("status")),
+                    _markdown_table_cell(row.get("cvx_code")),
+                    _markdown_table_cell(row.get("lot_number")),
+                ]
             )
-        table = "\n".join(table_rows) + "\n"
-    report_path = person_reports_dir / "immunizations.md"
+            + " |"
+        )
+    table = "\n".join(table_rows) + "\n"
     report_path.write_text(
         f"---\n{yaml_block}\n---\n\n# Immunizations\n\n{table}",
         encoding="utf-8",

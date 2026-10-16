@@ -2651,3 +2651,29 @@ def test_carried_over_synthesis_citations_follow_replaced_reports(tmp_path: Path
     assert "Old note [[Records/dummy_alice/Reports/lab-results|Lab trends]]" in content
     assert "[[Records/dummy_alice/Reports/genetics|PGx]]" in content
     assert "Reports/lab-trends" not in content
+
+
+def test_osteoporosis_screening_skipped_when_osteoporosis_in_digest(tmp_path: Path) -> None:
+    vault_root = tmp_path / "vault"
+    _scaffold_reports(vault_root, birth_year=1950)
+    _write_report(
+        vault_root / "Records" / "dummy_alice" / "Reports",
+        "medical-history-summary.md",
+        "medical_history_summary",
+        "Medical History",
+        "## Digest\n\n- Osteoporosis. First noted: 2015-04-20.\n",
+    )
+    conn = _user_conn()
+
+    report_path, _ = write_health_advisory(
+        vault_root,
+        "dummy_alice",
+        conn=conn,
+        ref_db_path=tmp_path / "missing.db",
+        generated_at=datetime(2023, 6, 10, tzinfo=UTC),
+    )
+
+    screening = report_path.read_text(encoding="utf-8").split("## Preventive Screening", 1)[1]
+    screening = screening.split("\n## ", 1)[0]
+    assert "**Osteoporosis screening (if risk factors)**" not in screening
+    assert "already diagnosed: Osteoporosis" in screening

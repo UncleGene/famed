@@ -2275,6 +2275,7 @@ _HISTORY_DIGEST_CHRONIC_LABELS: tuple[tuple[str, tuple[str, ...]], ...] = (
     ("Diabetes / prediabetes", ("diabetes", "prediabetes")),
     ("GERD / reflux", ("gerd", "gastroesophageal reflux", "heartburn", "reflux")),
     ("Osteoarthritis", ("osteoarthritis",)),
+    ("Osteoporosis", ("osteoporosis",)),
     ("Asthma", ("asthma",)),
     ("Chronic kidney disease", ("chronic kidney disease", "ckd")),
     ("Benign prostatic hyperplasia", ("benign prostatic hyperplasia", "bph")),

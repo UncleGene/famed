@@ -415,6 +415,7 @@ _SCREENING_DIAGNOSES: dict[str, tuple[str, ...]] = {
     "Lipid screening": ("Hyperlipidemia / high cholesterol",),
     "Depression screening": ("Depression",),
     "Colorectal cancer screening": ("Colon cancer", "Colorectal cancer", "Rectal cancer"),
+    "Osteoporosis screening (if risk factors)": ("Osteoporosis",),
 }
 
 

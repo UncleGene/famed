@@ -5,7 +5,7 @@
 | Report | Description |
 | :--- | :--- |
 | Pending Review | Current person-scoped review items (medication contradictions, History notes awaiting review, Lab rejection coverage, on-disk inbox/quarantine files) with source, reason, and resolving action; unassigned files appear only in `fm-review-pending` output |
-| Lab Results / Flagged for Discussion | One lab report grouped by LOINC-derived sections with trend charts, plus a focused report of out-of-range, trending, recently normalized, and coronary-calcium findings (ADR-030) |
+| Lab Results / Flagged for Discussion | One lab report grouped by LOINC-derived sections with trend charts, plus a focused report of out-of-range (including older results not re-checked since), trending, recently normalized, and coronary-calcium findings (ADR-030) |
 | Current Medications / Conflicts | Deduplicated current list grouped by type and schedule; per-axis source contradictions (ADR-042) |
 | Medical History Summary | Fact-oriented history with a Digest of chronic conditions and major events (ADR-029) |
 | Immunizations | Canonical immunization list with CVX codes and lot numbers when known |
