@@ -22,7 +22,7 @@ from famed.person_sync import (
     normalize_person_id,
     parse_front_matter,
 )
-from famed.reference_cache import load_loinc_classes, lookup_loinc_code
+from famed.reference_cache import load_loinc_analyte_keys, load_loinc_classes, lookup_loinc_code
 from famed.storage_contract import (
     AUDIT_LAB_DEDUPLICATED_ROW_RESTORED,
     AUDIT_LAB_INFERRED_LOINC_REPAIRED,
@@ -2180,6 +2180,11 @@ def lab_report_loinc_classes(vault_root: Path) -> dict[str, tuple[str, str, str]
     return load_loinc_classes(vault_root.parent / "data" / "reference")
 
 
+def lab_analyte_keys(vault_root: Path) -> dict[str, tuple[str, str, str]]:
+    """LOINC analyte keys from the reference cache beside the vault, never the CWD."""
+    return load_loinc_analyte_keys(vault_root.parent / "data" / "reference")
+
+
 def build_lab_conflicts_from_db(
     conn: sqlite3.Connection,
     person_id: str,
@@ -2297,6 +2302,8 @@ _FLAGGED_THRESHOLD_PCT = 0.10
 def build_lab_trends_from_db(
     conn: sqlite3.Connection,
     person_id: str,
+    *,
+    analyte_keys: Mapping[str, tuple[str, str, str]] | None = None,
 ) -> list[dict[str, Any]]:
     """Return one trend dict per distinct test name for *person_id*.
 
@@ -2310,6 +2317,8 @@ def build_lab_trends_from_db(
     - ``in_range_latest``: ``True``/``False`` when a numeric latest value and
       at least one reference bound are available (see ``_reading_in_range``);
       ``None`` otherwise.
+    - ``rechecked_as``: with *analyte_keys*, the name of a test that measured
+      the same analyte after this test's latest reading; ``None`` otherwise.
     """
     rows = conn.execute(
         """
@@ -2464,10 +2473,39 @@ def build_lab_trends_from_db(
                 "readings": readings,
                 "trend": trend,
                 "in_range_latest": in_range,
+                "rechecked_as": None,
             }
         )
 
+    if analyte_keys:
+        _mark_rechecked_under_other_names(result, analyte_keys)
     return result
+
+
+def _mark_rechecked_under_other_names(
+    trend_rows: list[dict[str, Any]], analyte_keys: Mapping[str, tuple[str, str, str]]
+) -> None:
+    """Record when a same-analyte test under another name was measured later.
+
+    Names stay separate rows ("Glucose" vs "Glucose, Fasting"), so without this
+    an old abnormal result looks never re-checked. A reading within one day is
+    the same draw restated (local date vs UTC timestamp), not a re-check.
+    """
+    groups: dict[tuple[str, str, str], list[tuple[date, dict[str, Any]]]] = {}
+    for row in trend_rows:
+        key = analyte_keys.get(str(row["loinc_code"] or ""))
+        latest = _parse_iso_date(row["readings"][-1].get("date")) if row["readings"] else None
+        if key is not None and latest is not None:
+            groups.setdefault(key, []).append((latest, row))
+    for group in groups.values():
+        for latest, row in group:
+            later = [
+                (other_latest, other)
+                for other_latest, other in group
+                if other is not row and other_latest - latest > timedelta(days=1)
+            ]
+            if later:
+                row["rechecked_as"] = max(later, key=lambda item: item[0])[1]["test_name"]
 
 
 def _is_archive_source_path(source_path: str) -> bool:
@@ -3278,6 +3316,7 @@ def _filter_flagged_lab_rows(
             r
             for r in trend_rows
             if r["in_range_latest"] is False
+            and not r.get("rechecked_as")
             and not _is_out_of_range_result_stale(r, latest_panel_date)
         ),
         key=_severity_order,
@@ -3326,6 +3365,7 @@ def _not_rechecked_lab_rows(trend_rows: list[dict[str, Any]]) -> list[dict[str, 
             r
             for r in trend_rows
             if r["in_range_latest"] is False
+            and not r.get("rechecked_as")
             and _is_out_of_range_result_stale(r, anchor)
             and not _is_out_of_range_result_stale(
                 r, anchor, window_days=_FLAGGED_NOT_RECHECKED_WINDOW_DAYS
@@ -3492,7 +3532,9 @@ def write_flagged_for_discussion_report(
     vault_root: Path,
     person_id: str,
 ) -> tuple[Path | None, int]:
-    trend_rows = build_lab_trends_from_db(conn, person_id)
+    trend_rows = build_lab_trends_from_db(
+        conn, person_id, analyte_keys=lab_analyte_keys(vault_root)
+    )
     coronary_calcium_findings = _extract_coronary_calcium_findings(vault_root, person_id)
     if not trend_rows and not coronary_calcium_findings:
         _remove_inapplicable_report(vault_root, person_id, "flagged-for-discussion.md")

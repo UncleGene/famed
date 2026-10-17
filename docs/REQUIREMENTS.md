@@ -787,7 +787,8 @@ POCT dipstick visit after a lipid panel → does not move the recency anchor. |
 Cholesterol 255 mg/dL against an upper-only bound of 200 → Out of Range. | LDL
 above range one year before the latest draw and not measured since → Not
 Re-checked, with its date, and a re-check prompt in the advisory. | Test measured
-three years ago → excluded.
+three years ago → excluded. | High "Glucose" one year ago, "Glucose, Fasting"
+(same LOINC component, property, and system) measured since → not listed.
 
 **Acceptance:** Exists for every person with labs. Single-sided ranges are
 classified by their one bound. Trending never duplicates Out of Range. SVG date

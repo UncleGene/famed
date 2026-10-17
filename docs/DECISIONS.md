@@ -739,6 +739,12 @@ Status: accepted | Related REQs: REQ-008, REQ-016, REQ-025
   of range and falls 180 days to 2 years before the most recent draw. They are
   listed after current results with their date, because an abnormal result that
   was never re-measured must not disappear. Older results are excluded.
+- **Re-checked under another name:** a test counts as re-measured when a test
+  with the same LOINC component (ignoring timing or challenge suffixes such as
+  `^post CFst`), property, and system was drawn more than one day after it, e.g.
+  "Glucose" re-checked as "Glucose, Fasting". Such a result leaves Out of Range
+  and Not Re-checked; the later test speaks for itself. A one-day gap is the
+  same draw restated, not a re-check. Tests without a LOINC code never match.
 - **Trending:** latest value still in range, moving toward a nearby bound,
   within the 2 most recent distinct panel dates. "Nearby" is 10% of the range
   width, or 10% of a single bound's magnitude. Tests without a bound are

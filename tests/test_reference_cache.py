@@ -23,6 +23,7 @@ from famed.reference_cache import (
     check_stale,
     download_dataset,
     download_rxnorm,
+    load_loinc_analyte_keys,
     load_loinc_index,
     load_rxnorm_index,
     lookup_loinc_code,
@@ -1978,3 +1979,40 @@ def test_reviewed_overrides_outrank_unit_qualified_concepts(tmp_path: Path) -> N
     assert lookup_loinc_code("Vitamin D 25-hydroxy", index, "ng/mL") == "62292-8"
     assert lookup_loinc_code("Bilirubin, total", index, "mg/dL") == "1975-2"
     assert lookup_loinc_code("Calcidiol", index, "ng/mL") == "1989-3"
+
+
+def test_loinc_analyte_keys_ignore_timing_suffix_but_keep_property(tmp_path: Path) -> None:
+    cache_dir = _write_concepts(
+        tmp_path,
+        [
+            {
+                "loinc_num": "1000-1",
+                "component": "Glucose",
+                "property": "MCnc",
+                "system": "Ser/Plas",
+            },
+            {
+                "loinc_num": "1000-2",
+                "component": "Glucose^post CFst",
+                "property": "MCnc",
+                "system": "Ser/Plas",
+            },
+            {
+                "loinc_num": "1000-3",
+                "component": "Hemoglobin",
+                "property": "EntMass",
+                "system": "RBC",
+            },
+            {
+                "loinc_num": "1000-4",
+                "component": "Hemoglobin",
+                "property": "EntMCnc",
+                "system": "RBC",
+            },
+        ],
+    )
+
+    keys = load_loinc_analyte_keys(cache_dir)
+
+    assert keys["1000-1"] == keys["1000-2"] == ("glucose", "MCnc", "Ser/Plas")
+    assert keys["1000-3"] != keys["1000-4"]

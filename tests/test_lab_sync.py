@@ -9277,3 +9277,77 @@ def test_not_rechecked_group_absent_when_old_result_is_in_range() -> None:
     report = render_flagged_for_discussion_report("dummy_alice", rows)
     assert "### Not Re-checked" not in report
     assert build_lab_observations_for_advisory(rows) == []
+
+
+_SERUM_GLUCOSE_KEY = ("glucose", "MCnc", "Ser/Plas")
+
+
+def test_variant_name_measured_later_counts_as_rechecked() -> None:
+    """ADR-030: a later same-analyte test under another name re-checks the result."""
+    conn = _trends_conn(
+        {
+            "test_name": "Glucose",
+            "loinc_code": "1000-1",
+            "value": 140.0,
+            "ref_low": 70.0,
+            "ref_high": 99.0,
+            "observed_at": "2023-03-01",
+        },
+        {
+            "test_name": "Glucose, Fasting",
+            "loinc_code": "1000-2",
+            "value": 90.0,
+            "ref_low": 70.0,
+            "ref_high": 99.0,
+            "observed_at": "2024-02-01",
+        },
+    )
+    keys = {"1000-1": _SERUM_GLUCOSE_KEY, "1000-2": _SERUM_GLUCOSE_KEY}
+
+    rows = build_lab_trends_from_db(conn, "dummy_alice", analyte_keys=keys)
+
+    glucose = next(r for r in rows if r["test_name"] == "Glucose")
+    assert glucose["rechecked_as"] == "Glucose, Fasting"
+    assert "### Not Re-checked" not in render_flagged_for_discussion_report("dummy_alice", rows)
+    assert build_lab_observations_for_advisory(rows) == []
+    assert build_lab_discussion_prompts(rows) == []
+
+
+def test_same_draw_or_other_analyte_does_not_count_as_rechecked() -> None:
+    conn = _trends_conn(
+        {
+            "test_name": "Glucose",
+            "loinc_code": "1000-1",
+            "value": 140.0,
+            "ref_high": 99.0,
+            "observed_at": "2023-03-01",
+        },
+        # Same draw restated a day later (local date vs UTC timestamp).
+        {
+            "test_name": "Glucose, Fasting",
+            "loinc_code": "1000-2",
+            "value": 140.0,
+            "ref_high": 99.0,
+            "observed_at": "2023-03-02",
+        },
+        # Same component and specimen, different property.
+        {
+            "test_name": "Glucose Ratio",
+            "loinc_code": "1000-3",
+            "value": 1.0,
+            "observed_at": "2024-02-01",
+        },
+    )
+    keys = {
+        "1000-1": _SERUM_GLUCOSE_KEY,
+        "1000-2": _SERUM_GLUCOSE_KEY,
+        "1000-3": ("glucose", "MRto", "Ser/Plas"),
+    }
+
+    rows = build_lab_trends_from_db(conn, "dummy_alice", analyte_keys=keys)
+
+    assert {r["test_name"]: r["rechecked_as"] for r in rows} == {
+        "Glucose": None,
+        "Glucose, Fasting": None,
+        "Glucose Ratio": None,
+    }

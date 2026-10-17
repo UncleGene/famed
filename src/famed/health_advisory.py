@@ -19,6 +19,7 @@ from famed.lab_sync import (
     build_lab_discussion_prompts,
     build_lab_observations_for_advisory,
     build_lab_trends_from_db,
+    lab_analyte_keys,
     write_category_index_note,
 )
 from famed.person_sync import load_person_display_name
@@ -1232,7 +1233,9 @@ def write_health_advisory(
         for key, filename, title in source_keys
     ]
 
-    trend_rows = build_lab_trends_from_db(conn, person_id)
+    trend_rows = build_lab_trends_from_db(
+        conn, person_id, analyte_keys=lab_analyte_keys(vault_root)
+    )
     lab_obs = build_lab_observations_for_advisory(trend_rows) or None
     lab_prompts = build_lab_discussion_prompts(trend_rows)
 

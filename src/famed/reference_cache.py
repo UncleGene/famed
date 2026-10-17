@@ -834,6 +834,36 @@ def load_loinc_classes(cache_dir: Path) -> dict[str, tuple[str, str, str]]:
     return attributes
 
 
+@functools.lru_cache(maxsize=4)
+def load_loinc_analyte_keys(cache_dir: Path) -> dict[str, tuple[str, str, str]]:
+    """Return LOINC code -> (component without timing suffix, PROPERTY, SYSTEM); {} when absent.
+
+    Codes sharing a key measure the same quantity in the same specimen, e.g. a
+    random and a fasting serum glucose (``Glucose`` vs ``Glucose^post CFst``).
+    """
+    parsed = cache_dir / "loinc" / LOINC_PARSED_FILENAME
+    if not parsed.is_file():
+        return {}
+    keys: dict[str, tuple[str, str, str]] = {}
+    try:
+        with parsed.open(encoding="utf-8") as handle:
+            for line in handle:
+                if not line.strip():
+                    continue
+                record = json.loads(line)
+                code = record.get("loinc_num")
+                component = str(record.get("component") or "").split("^", 1)[0].strip()
+                if code and component:
+                    keys[str(code)] = (
+                        component.casefold(),
+                        str(record.get("property") or ""),
+                        str(record.get("system") or ""),
+                    )
+    except (OSError, json.JSONDecodeError):
+        return {}
+    return keys
+
+
 def load_loinc_index(cache_dir: Path) -> dict[str, str]:
     """Return a normalized-name → LOINC code mapping from the parsed LOINC cache.
 
