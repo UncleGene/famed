@@ -1981,7 +1981,9 @@ def test_reviewed_overrides_outrank_unit_qualified_concepts(tmp_path: Path) -> N
     assert lookup_loinc_code("Calcidiol", index, "ng/mL") == "1989-3"
 
 
-def test_loinc_analyte_keys_ignore_timing_suffix_but_keep_property(tmp_path: Path) -> None:
+def test_loinc_analyte_keys_ignore_fasting_suffix_but_keep_challenge_and_property(
+    tmp_path: Path,
+) -> None:
     cache_dir = _write_concepts(
         tmp_path,
         [
@@ -2009,10 +2011,36 @@ def test_loinc_analyte_keys_ignore_timing_suffix_but_keep_property(tmp_path: Pat
                 "property": "EntMCnc",
                 "system": "RBC",
             },
+            {
+                "loinc_num": "1000-5",
+                "component": "Glucose^2H post 75 g glucose PO",
+                "property": "MCnc",
+                "system": "Ser/Plas",
+            },
+            {
+                "loinc_num": "1000-6",
+                "component": "Glucose^post 12H CFst",
+                "property": "MCnc",
+                "system": "Ser/Plas",
+            },
+            {
+                "loinc_num": "1000-7",
+                "component": "Glucose^pre 12H CFst",
+                "property": "MCnc",
+                "system": "Ser/Plas",
+            },
+            {
+                "loinc_num": "1000-8",
+                "component": "Glucose^post Cfst",
+                "property": "MCnc",
+                "system": "Ser/Plas",
+            },
         ],
     )
 
     keys = load_loinc_analyte_keys(cache_dir)
 
-    assert keys["1000-1"] == keys["1000-2"] == ("glucose", "MCnc", "Ser/Plas")
+    fasting_variants = {keys[code] for code in ("1000-1", "1000-2", "1000-6", "1000-7", "1000-8")}
+    assert fasting_variants == {("glucose", "MCnc", "Ser/Plas")}
+    assert keys["1000-5"] != keys["1000-1"]
     assert keys["1000-3"] != keys["1000-4"]

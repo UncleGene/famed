@@ -843,18 +843,24 @@ def load_loinc_classes(cache_dir: Path) -> dict[str, tuple[str, str, str]]:
     return attributes
 
 
+_LOINC_FASTING_SUFFIX_RE = re.compile(r"\^(?:post|pre)(?: \d+H)? CFst$", re.IGNORECASE)
+
+
 @functools.lru_cache(maxsize=4)
 def load_loinc_analyte_keys(cache_dir: Path) -> dict[str, tuple[str, str, str]]:
-    """Return LOINC code -> (component without timing suffix, PROPERTY, SYSTEM); {} when absent.
+    """Return LOINC code -> (component without fasting suffix, PROPERTY, SYSTEM); {} when absent.
 
     Codes sharing a key measure the same quantity in the same specimen, e.g. a
     random and a fasting serum glucose (``Glucose`` vs ``Glucose^post CFst``).
+    Challenge suffixes (``^2H post 75 g glucose PO``) stay in the key: a baseline
+    result does not re-check a tolerance-test result.
     """
     keys: dict[str, tuple[str, str, str]] = {}
     try:
         for record in _iter_parsed_loinc_records(cache_dir):
             code = record.get("loinc_num")
-            component = str(record.get("component") or "").split("^", 1)[0].strip()
+            component = _LOINC_FASTING_SUFFIX_RE.sub("", str(record.get("component") or ""))
+            component = component.strip()
             if code and component:
                 keys[str(code)] = (
                     component.casefold(),

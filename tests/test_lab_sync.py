@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import sqlite3
 import sys
 from datetime import date
@@ -7881,6 +7882,51 @@ def test_write_flagged_creates_file(tmp_path: Path) -> None:
     assert count == 1
 
 
+def test_write_flagged_uses_loinc_cache_beside_vault_for_rechecks(tmp_path: Path) -> None:
+    """The writer must pass analyte keys, or a variant re-check is ignored (ADR-030)."""
+    loinc_dir = tmp_path / "data" / "reference" / "loinc"
+    loinc_dir.mkdir(parents=True)
+    loinc_dir.joinpath("loinc_concepts.jsonl").write_text(
+        "".join(
+            json.dumps(
+                {
+                    "loinc_num": code,
+                    "component": component,
+                    "property": "MCnc",
+                    "system": "Ser/Plas",
+                    "class": "CHEM",
+                }
+            )
+            + "\n"
+            for code, component in (("1000-1", "Glucose"), ("1000-2", "Glucose^post CFst"))
+        ),
+        encoding="utf-8",
+    )
+    conn = _trends_conn(
+        {
+            "test_name": "Glucose",
+            "loinc_code": "1000-1",
+            "value": 140.0,
+            "ref_high": 99.0,
+            "observed_at": "2023-03-01",
+        },
+        {
+            "test_name": "Glucose, Fasting",
+            "loinc_code": "1000-2",
+            "value": 90.0,
+            "ref_high": 99.0,
+            "observed_at": "2024-02-01",
+        },
+    )
+    vault = tmp_path / "famed-vault"
+    (vault / "Records" / "dummy_alice" / "Reports").mkdir(parents=True)
+
+    report_path, _ = write_flagged_for_discussion_report(conn, vault, "dummy_alice")
+
+    assert report_path is not None
+    assert "### Not Re-checked" not in report_path.read_text(encoding="utf-8")
+
+
 # ---------------------------------------------------------------------------
 # SVG sparkline rendering
 # ---------------------------------------------------------------------------
@@ -9277,6 +9323,23 @@ def test_not_rechecked_group_absent_when_old_result_is_in_range() -> None:
     report = render_flagged_for_discussion_report("dummy_alice", rows)
     assert "### Not Re-checked" not in report
     assert build_lab_observations_for_advisory(rows) == []
+
+
+def test_rechecked_prompts_share_the_limit_after_current_results() -> None:
+    current = [
+        _single_reading_row(f"Analyte {index}", "2024-02-01", 150.0, in_range=False)
+        for index in range(3)
+    ]
+    older = [
+        _single_reading_row(f"Older analyte {index}", "2023-03-01", 150.0, in_range=False)
+        for index in range(3)
+    ]
+
+    prompts = build_lab_discussion_prompts([*current, *older])
+
+    assert len(prompts) == 5
+    assert sum("should be re-checked" in prompt for prompt in prompts) == 2
+    assert all("should be re-checked" not in prompt for prompt in prompts[:3])
 
 
 _SERUM_GLUCOSE_KEY = ("glucose", "MCnc", "Ser/Plas")
