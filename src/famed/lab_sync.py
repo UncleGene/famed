@@ -3425,26 +3425,29 @@ def build_lab_discussion_prompts(trend_rows: list[dict[str, Any]], *, limit: int
     out_of_range, _, _, _, _ = _filter_flagged_lab_rows(trend_rows)
     prompts: list[str] = []
     for row in out_of_range[:limit]:
-        latest = row["readings"][-1]
-        unit = f" {latest['unit']}" if latest.get("unit") else ""
-        ref_range = _format_reference_range(latest.get("ref_low"), latest.get("ref_high"))
+        value, ref_range, _ = _latest_reading_prompt_parts(row)
         previous = _previous_numeric_value(row)
         previous_text = f", previously {previous}" if previous and previous != "—" else ""
         prompts.append(
-            f"- Ask about {row['test_name']}: {latest['value']}{unit} is outside the "
+            f"- Ask about {row['test_name']}: {value} is outside the "
             f"reference range ({ref_range}{previous_text})."
         )
     for row in _not_rechecked_lab_rows(trend_rows)[: max(limit - len(prompts), 0)]:
-        latest = row["readings"][-1]
-        unit = f" {latest['unit']}" if latest.get("unit") else ""
-        ref_range = _format_reference_range(latest.get("ref_low"), latest.get("ref_high"))
-        observed_date = str(latest.get("date") or "")[:10]
+        value, ref_range, observed_date = _latest_reading_prompt_parts(row)
         prompts.append(
-            f"- Ask whether {row['test_name']} should be re-checked: {latest['value']}{unit} "
+            f"- Ask whether {row['test_name']} should be re-checked: {value} "
             f"was outside the reference range ({ref_range}) on {observed_date} and has not "
             "been measured since."
         )
     return prompts
+
+
+def _latest_reading_prompt_parts(row: dict[str, Any]) -> tuple[str, str, str]:
+    """Return (value with unit, reference range, date) of the latest reading."""
+    latest = row["readings"][-1]
+    unit = f" {latest['unit']}" if latest.get("unit") else ""
+    ref_range = _format_reference_range(latest.get("ref_low"), latest.get("ref_high"))
+    return f"{latest['value']}{unit}", ref_range, str(latest.get("date") or "")[:10]
 
 
 def render_flagged_for_discussion_report(

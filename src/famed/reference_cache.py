@@ -16,6 +16,7 @@ import sqlite3
 import time
 import urllib.error
 import urllib.request
+from collections.abc import Iterator
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
@@ -805,30 +806,38 @@ def _loinc_canonical_rank(record: dict[str, Any]) -> tuple[int, int, int]:
     return (is_active, system_rank, is_quantitative)
 
 
+def _iter_parsed_loinc_records(cache_dir: Path) -> Iterator[dict[str, Any]]:
+    """Yield records from the parsed LOINC cache; nothing when the file is absent.
+
+    Raises ``OSError`` or ``json.JSONDecodeError`` on an unreadable file; callers
+    decide how to degrade.
+    """
+    parsed = cache_dir / "loinc" / LOINC_PARSED_FILENAME
+    if not parsed.is_file():
+        return
+    with parsed.open(encoding="utf-8") as handle:
+        for line in handle:
+            if line.strip():
+                yield json.loads(line)
+
+
 @functools.lru_cache(maxsize=4)
 def load_loinc_classes(cache_dir: Path) -> dict[str, tuple[str, str, str]]:
     """Return LOINC code -> (CLASS, COMPONENT, SYSTEM) from the parsed cache; {} when absent.
 
     These official LOINC fields drive caregiver report sections (ADR-031).
     """
-    parsed = cache_dir / "loinc" / LOINC_PARSED_FILENAME
-    if not parsed.is_file():
-        return {}
     attributes: dict[str, tuple[str, str, str]] = {}
     try:
-        with parsed.open(encoding="utf-8") as handle:
-            for line in handle:
-                if not line.strip():
-                    continue
-                record = json.loads(line)
-                code = record.get("loinc_num")
-                loinc_class = record.get("class")
-                if code and loinc_class:
-                    attributes[str(code)] = (
-                        str(loinc_class),
-                        str(record.get("component") or ""),
-                        str(record.get("system") or ""),
-                    )
+        for record in _iter_parsed_loinc_records(cache_dir):
+            code = record.get("loinc_num")
+            loinc_class = record.get("class")
+            if code and loinc_class:
+                attributes[str(code)] = (
+                    str(loinc_class),
+                    str(record.get("component") or ""),
+                    str(record.get("system") or ""),
+                )
     except (OSError, json.JSONDecodeError):
         return {}
     return attributes
@@ -841,24 +850,17 @@ def load_loinc_analyte_keys(cache_dir: Path) -> dict[str, tuple[str, str, str]]:
     Codes sharing a key measure the same quantity in the same specimen, e.g. a
     random and a fasting serum glucose (``Glucose`` vs ``Glucose^post CFst``).
     """
-    parsed = cache_dir / "loinc" / LOINC_PARSED_FILENAME
-    if not parsed.is_file():
-        return {}
     keys: dict[str, tuple[str, str, str]] = {}
     try:
-        with parsed.open(encoding="utf-8") as handle:
-            for line in handle:
-                if not line.strip():
-                    continue
-                record = json.loads(line)
-                code = record.get("loinc_num")
-                component = str(record.get("component") or "").split("^", 1)[0].strip()
-                if code and component:
-                    keys[str(code)] = (
-                        component.casefold(),
-                        str(record.get("property") or ""),
-                        str(record.get("system") or ""),
-                    )
+        for record in _iter_parsed_loinc_records(cache_dir):
+            code = record.get("loinc_num")
+            component = str(record.get("component") or "").split("^", 1)[0].strip()
+            if code and component:
+                keys[str(code)] = (
+                    component.casefold(),
+                    str(record.get("property") or ""),
+                    str(record.get("system") or ""),
+                )
     except (OSError, json.JSONDecodeError):
         return {}
     return keys
@@ -873,17 +875,12 @@ def load_loinc_index(cache_dir: Path) -> dict[str, str]:
     rather than file order (ADR-034), and ``_CANONICAL_LOINC_OVERRIDES`` wins
     outright. Returns an empty dict when the parsed file is absent; never raises.
     """
-    parsed = cache_dir / "loinc" / LOINC_PARSED_FILENAME
-    if not parsed.is_file():
+    if not (cache_dir / "loinc" / LOINC_PARSED_FILENAME).is_file():
         return {}
     index: dict[str, str] = {}
     best_rank: dict[str, tuple[int, int, int]] = {}
     try:
-        for line in parsed.read_text(encoding="utf-8").splitlines():
-            line = line.strip()
-            if not line:
-                continue
-            record = json.loads(line)
+        for record in _iter_parsed_loinc_records(cache_dir):
             loinc_num = record.get("loinc_num", "")
             if not loinc_num:
                 continue
