@@ -1203,11 +1203,10 @@ def write_health_advisory(
 ) -> tuple[Path, int]:
     """Deterministically (re)compose health-advisory.md from current sources.
 
-    Does not preserve any existing "## Synthesized Insights" section -- the
-    rewrite below has no knowledge of it. Call sites with no live agent
-    present (unattended/automated regeneration) must use
-    :func:`write_health_advisory_unattended` instead, which carries that
-    section over as stale rather than silently dropping it (ADR-026).
+    Any existing "## Synthesized Insights" section is carried over verbatim
+    with its status flipped to ``stale`` (ADR-026): a deterministic rewrite
+    never drops live-agent synthesis; only a new live run replaces it via
+    :func:`persist_synthesized_insights`.
     """
     report_dir = reports_dir(vault_root, person_id)
     if not report_dir.is_dir():
@@ -1240,6 +1239,7 @@ def write_health_advisory(
     lab_prompts = build_lab_discussion_prompts(trend_rows)
 
     report_path = report_dir / "health-advisory.md"
+    carryover = extract_synthesis_carryover(report_path)
     report_path.write_text(
         render_health_advisory(
             person_id=person_id,
@@ -1257,6 +1257,7 @@ def write_health_advisory(
         ),
         encoding="utf-8",
     )
+    carry_over_synthesis_as_stale(report_path, carryover, now=generated)
     write_category_index_note(
         report_dir,
         person_id,
@@ -1302,26 +1303,3 @@ def persist_synthesized_insights(
         insert_before_headings=DEFAULT_SYNTHESIS_INSERT_BEFORE,
         generated_at=generated_at,
     )
-
-
-def write_health_advisory_unattended(
-    vault_root: Path,
-    person_id: str,
-    *,
-    conn: sqlite3.Connection,
-    ref_db_path: Path,
-    generated_at: datetime | None = None,
-) -> tuple[Path, int]:
-    """Like :func:`write_health_advisory`, but for the unattended ADR-025
-    cascade: no live agent is present on this call path, so any existing
-    rendered Synthesized Insights section is carried over verbatim with its
-    status flipped to ``stale`` (ADR-026 two-tier staleness) instead of being
-    silently dropped by the deterministic rewrite below.
-    """
-    report_path = reports_dir(vault_root, person_id) / "health-advisory.md"
-    carryover = extract_synthesis_carryover(report_path)
-    result = write_health_advisory(
-        vault_root, person_id, conn=conn, ref_db_path=ref_db_path, generated_at=generated_at
-    )
-    carry_over_synthesis_as_stale(report_path, carryover, now=generated_at or datetime.now(UTC))
-    return result

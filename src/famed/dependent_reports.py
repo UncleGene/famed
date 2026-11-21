@@ -17,7 +17,7 @@ from famed.annotation_cache import REFERENCE_DB_FILENAME
 from famed.fhir_export import write_fhir_export
 from famed.findings_ledger import FINDINGS_LEDGER_PATH
 from famed.genetics_report import write_genetics_report
-from famed.health_advisory import load_heritable_dependents, write_health_advisory_unattended
+from famed.health_advisory import load_heritable_dependents, write_health_advisory
 from famed.query import list_person_ids
 from famed.report_consistency import (
     ReportConsistencyError,
@@ -74,9 +74,7 @@ def _refresh_health_advisory(
     ref_db_path: Path,
     findings_ledger_path: Path | None,
 ) -> Path:
-    path, _count = write_health_advisory_unattended(
-        vault_root, person_id, conn=conn, ref_db_path=ref_db_path
-    )
+    path, _count = write_health_advisory(vault_root, person_id, conn=conn, ref_db_path=ref_db_path)
     return path
 
 

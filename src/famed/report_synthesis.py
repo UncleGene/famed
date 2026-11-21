@@ -66,7 +66,7 @@ def render_stale_banner(generated_at: str, now: datetime | None = None) -> str:
     return (
         f"> [!note] Stale synthesis\n"
         f"> Generated {generated_at} by a live agent; not refreshed on"
-        f" this unattended report regeneration.\n"
+        f" this deterministic report regeneration.\n"
     )
 
 

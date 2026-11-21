@@ -97,9 +97,7 @@ def _patch_composite_writers(
 
         return writer
 
-    monkeypatch.setattr(
-        dependent_reports, "write_health_advisory_unattended", make_writer("health_advisory")
-    )
+    monkeypatch.setattr(dependent_reports, "write_health_advisory", make_writer("health_advisory"))
     # write_medication_safety_alerts is imported lazily inside the wrapper (to
     # break a circular import), so it must be patched at its source module.
     monkeypatch.setattr(
@@ -282,7 +280,7 @@ def test_refresh_medication_dependent_reports_skips_composites_before_person_onb
         "write_genetics_report",
         lambda *_a, **_k: calls.append("genetics") or tmp_path / "genetics.md",
     )
-    monkeypatch.setattr(dependent_reports, "write_health_advisory_unattended", fail_if_called)
+    monkeypatch.setattr(dependent_reports, "write_health_advisory", fail_if_called)
     monkeypatch.setattr(
         "famed.medication_safety_alerts.write_medication_safety_alerts", fail_if_called
     )
@@ -336,7 +334,7 @@ def test_refresh_derived_reports_for_household_runs_full_cascade_per_person(
 
     monkeypatch.setattr(
         dependent_reports,
-        "write_health_advisory_unattended",
+        "write_health_advisory",
         make_composite_writer("health_advisory"),
     )
     monkeypatch.setattr(

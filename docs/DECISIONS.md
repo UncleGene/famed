@@ -652,8 +652,9 @@ Status: accepted | Related REQs: REQ-014, REQ-016
 5. **Tier inheritance.** An insight's tier must not exceed the weakest tier among
    its citations. Recombining already-tiered vault evidence does not require new
    literature verification.
-6. **Staleness.** On an unattended refresh the synthesis section is carried over
-   marked `synthesis_status: stale` with its `generated_at`. Synthesis older than
+6. **Staleness.** Every deterministic refresh, attended or not, carries the
+   synthesis section over marked `synthesis_status: stale` with its
+   `generated_at`; only a new live run replaces it. Synthesis older than
    30 days, or contradicted by newer canonical facts, renders under a prominent
    dated warning.
 7. Synthesis lives in the health advisory only. The doctor-visit packet stays a

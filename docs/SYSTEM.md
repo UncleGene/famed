@@ -113,7 +113,7 @@ dependency order after ingestion, corrections, and reference-cache changes
 
 The doctor-visit packet is generated on demand and is a dated snapshot
 (ADR-031). Agent-authored synthesis lives in the health advisory and is carried
-over as stale on unattended refreshes (ADR-026).
+over as stale on every deterministic refresh (ADR-026).
 
 ## Reports
 

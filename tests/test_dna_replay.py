@@ -274,7 +274,7 @@ def test_replay_real_composites_ignore_default_working_ledger(
         "write_genetics_report",
         lambda conn, vault, person_id, *_a, **_k: write_first_tier(conn, vault, person_id)[0],
     )
-    monkeypatch.setattr(dependent_reports, "write_health_advisory_unattended", write_health)
+    monkeypatch.setattr(dependent_reports, "write_health_advisory", write_health)
     try:
         replay_retained_dna_sources(
             root=tmp_path,

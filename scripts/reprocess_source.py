@@ -78,7 +78,7 @@ def main() -> None:
 
     from famed.annotation_cache import REFERENCE_DB_FILENAME
     from famed.dependent_reports import has_composite_report_surface
-    from famed.health_advisory import write_health_advisory_unattended
+    from famed.health_advisory import write_health_advisory
     from famed.lab_sync import write_lab_results_report
     from famed.reprocess_sources import ReprocessError
     from famed.retained_replay import (
@@ -98,7 +98,7 @@ def main() -> None:
         trend_path, _ = write_lab_results_report(conn, vault_root, person_id)
         if not has_composite_report_surface(vault_root, person_id):
             return trend_path, None
-        advisory_path, _ = write_health_advisory_unattended(
+        advisory_path, _ = write_health_advisory(
             vault_root=vault_root,
             person_id=person_id,
             conn=conn,

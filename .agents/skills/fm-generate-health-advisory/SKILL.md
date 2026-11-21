@@ -79,13 +79,11 @@ metadata:
      validation gate in the next step rejects it, but it should not be
      written in the first place.
 4. Persist the candidates (skip this step entirely during unattended/
-   automated regeneration — synthesis is live-agent-only, ADR-026). Unattended
-   regeneration paths use `write_health_advisory_unattended`, which carries
-   any prior "## Synthesized Insights" section over with `synthesis_status:
-   stale` rather than dropping it, so a person who has never had a live-agent
-   session simply has no synthesis section, while one who has gets a
-   stale-marked carry-over of their last live-agent run instead of having it
-   silently disappear:
+   automated regeneration — synthesis is live-agent-only, ADR-026). Step 2
+   always carries any prior "## Synthesized Insights" section over with
+   `synthesis_status: stale` rather than dropping it; persisting here replaces
+   it with a current section. A person with no prior live-agent run simply has
+   no synthesis section:
 
    ```bash
    python scripts/persist_synthesized_insights.py --person-id <person_id> --insights-json '<JSON array of candidates>'

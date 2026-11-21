@@ -17,7 +17,6 @@ from famed.health_advisory import (
     build_genetic_risk_flags,
     persist_synthesized_insights,
     write_health_advisory,
-    write_health_advisory_unattended,
 )
 from famed.lab_sync import write_category_index_note
 from famed.persist_synthesized_insights import main as persist_insights_main
@@ -1567,6 +1566,17 @@ def test_generate_health_advisory_helper_reports_success(
     assert "Wrote" in captured.out
     assert "Genetic risk flags: 0" in captured.out
 
+    # A skill-driven deterministic rerun keeps prior live synthesis as stale.
+    persist_synthesized_insights(
+        vault_root, "dummy_alice", [_valid_candidate()], generated_at="2023-06-24T00:00:00Z"
+    )
+    assert generate_advisory_main() == 0
+    content = (vault_root / "Records" / "dummy_alice" / "Reports" / "health-advisory.md").read_text(
+        encoding="utf-8"
+    )
+    assert "synthesis_status: stale" in content
+    assert "Her lab trend and family history" in content
+
 
 # ---------------------------------------------------------------------------
 # Family history context
@@ -2360,7 +2370,7 @@ def test_persist_synthesized_insights_empty_candidates_renders_placeholder(
     assert "_No live-agent-synthesized cross-domain insights yet._" in content
 
 
-def test_write_health_advisory_unattended_carries_over_synthesis_as_stale(
+def test_write_health_advisory_carries_over_synthesis_as_stale(
     tmp_path: Path,
 ) -> None:
     vault_root = tmp_path / "vault"
@@ -2377,7 +2387,7 @@ def test_write_health_advisory_unattended_carries_over_synthesis_as_stale(
         vault_root, "dummy_alice", [_valid_candidate()], generated_at="2023-06-24T00:00:00Z"
     )
 
-    write_health_advisory_unattended(
+    write_health_advisory(
         vault_root,
         "dummy_alice",
         conn=conn,
@@ -2395,14 +2405,14 @@ def test_write_health_advisory_unattended_carries_over_synthesis_as_stale(
     assert "Generated 2023-06-24T00:00:00Z by a live agent" in content
 
 
-def test_write_health_advisory_unattended_no_prior_synthesis_renders_normally(
+def test_write_health_advisory_no_prior_synthesis_renders_normally(
     tmp_path: Path,
 ) -> None:
     vault_root = tmp_path / "vault"
     _scaffold_reports(vault_root)
     conn = _user_conn()
 
-    report_path, _ = write_health_advisory_unattended(
+    report_path, _ = write_health_advisory(
         vault_root,
         "dummy_alice",
         conn=conn,
@@ -2416,7 +2426,7 @@ def test_write_health_advisory_unattended_no_prior_synthesis_renders_normally(
     assert "synthesis_status" not in front_matter
 
 
-def test_write_health_advisory_unattended_idempotent_when_already_stale(
+def test_write_health_advisory_idempotent_when_already_stale(
     tmp_path: Path,
 ) -> None:
     vault_root = tmp_path / "vault"
@@ -2433,7 +2443,7 @@ def test_write_health_advisory_unattended_idempotent_when_already_stale(
         vault_root, "dummy_alice", [_valid_candidate()], generated_at="2023-06-24T00:00:00Z"
     )
 
-    write_health_advisory_unattended(
+    write_health_advisory(
         vault_root,
         "dummy_alice",
         conn=conn,
@@ -2441,7 +2451,7 @@ def test_write_health_advisory_unattended_idempotent_when_already_stale(
         generated_at=datetime(2023, 6, 25, tzinfo=UTC),
     )
     content_after_first_unattended = report_path.read_text(encoding="utf-8")
-    write_health_advisory_unattended(
+    write_health_advisory(
         vault_root,
         "dummy_alice",
         conn=conn,
@@ -2459,7 +2469,7 @@ def test_write_health_advisory_unattended_idempotent_when_already_stale(
     assert content == content_after_first_unattended
 
 
-def test_write_health_advisory_unattended_carries_over_empty_insights_placeholder(
+def test_write_health_advisory_carries_over_empty_insights_placeholder(
     tmp_path: Path,
 ) -> None:
     vault_root = tmp_path / "vault"
@@ -2474,7 +2484,7 @@ def test_write_health_advisory_unattended_carries_over_empty_insights_placeholde
     )
     persist_synthesized_insights(vault_root, "dummy_alice", [], generated_at="2023-06-24T00:00:00Z")
 
-    write_health_advisory_unattended(
+    write_health_advisory(
         vault_root,
         "dummy_alice",
         conn=conn,
@@ -2599,7 +2609,7 @@ def test_synthesis_older_than_30_days_gets_dated_warning_banner(tmp_path: Path) 
     )
 
     for regenerated in (datetime(2023, 8, 1, tzinfo=UTC), datetime(2023, 8, 2, tzinfo=UTC)):
-        write_health_advisory_unattended(
+        write_health_advisory(
             vault_root,
             "dummy_alice",
             conn=conn,
@@ -2639,7 +2649,7 @@ def test_carried_over_synthesis_citations_follow_replaced_reports(tmp_path: Path
     )
     report_path.write_text(text, encoding="utf-8")
 
-    write_health_advisory_unattended(
+    write_health_advisory(
         vault_root,
         "dummy_alice",
         conn=conn,
