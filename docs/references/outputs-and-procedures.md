@@ -55,14 +55,15 @@ This contract follows the FHIR R4
 
 #### Contract: canonical immunization store → FHIR bundle builder
 
-- **Version:** `famed-immunization-export-v1`. Adding `Immunization` resources is
+- **Compatibility:** adding `Immunization` resources is
   backward-compatible for bundle readers. The local validator continues to
   accept an otherwise-valid historical bundle with zero Immunization resources;
   regeneration adds all currently eligible rows.
 - **Producer:** the canonical `immunizations` DB table and its source-linked
   `Records/<person_id>/Immunizations/` notes. **Consumer:** the deterministic FHIR
   collection-bundle builder and local validator
-  (`src/famed/immunization_sync.py:37`, `src/famed/fhir_export.py:696`).
+  (`persist_immunization_rows` in `src/famed/immunization_sync.py`;
+  `_load_immunization_rows` and `_immunization` in `src/famed/fhir_export.py`).
 - **Eligibility:** export one resource for every current canonical row belonging
   to the export person. Presence in the canonical table is the reviewed/accepted
   boundary; `needs_review` history facts, placeholders, quarantine records, and
@@ -96,8 +97,8 @@ This contract follows the FHIR R4
   source-path extension for every unique, sorted path in `source_paths`, falling
   back to `source_path`. A non-blank malformed `source_paths` value is a blocking
   error rather than permission to discard retained sources. Provenance is
-  required; a row with none blocks export (`src/famed/fhir_export.py:370`,
-  `src/famed/fhir_export.py:946`).
+  required; a row with none blocks export (`_immunization_source_paths` in
+  `src/famed/fhir_export.py`).
 - **Deduplication and ordering:** canonical row identity remains authoritative.
   Equivalent source events that have already converged on one row produce one
   resource carrying all retained source paths. Sort rows deterministically by
@@ -111,7 +112,9 @@ This contract follows the FHIR R4
   when the person has both a vault identity note and DB person row. Otherwise it
   follows the existing safe skip-until-scaffolded behavior. Repeated generation
   may advance `Bundle.timestamp`, but resource ids, payloads, counts, and ordering
-  remain stable for unchanged inputs (`src/famed/dependent_reports.py:379`).
+  remain stable for unchanged inputs (`refresh_fhir_dependent_export` and
+  `has_fhir_export_surface` in `src/famed/dependent_reports.py`, called from
+  `persist_immunization_rows`).
 - **Non-goals:** external profile certification, terminology enrichment, inferred
   dates or status, vaccination recommendations, adverse reactions, and changes to
   canonical immunization storage. The exporter does not resolve source conflicts:
@@ -151,19 +154,13 @@ This contract follows the FHIR R4
 | Mutation refresh | Persistence, correction, reprocessing, and removal regenerate the configured export; missing identity scaffolding skips safely and a later refresh catches up. |
 | Mixed bundle validation | Existing Patient, Observation, DiagnosticReport, MedicationStatement, Condition, and FamilyMemberHistory rules still pass alongside Immunization rules. |
 
-The release gates include a red-green same-event conflict test against canonical
-persistence, focused FHIR/immunization and refresh-path tests,
-the full test suite, Ruff, Pyrefly, privacy checking, deterministic regeneration
-of current exports, vault JSON/reference validation, code simplification,
-code review, and documentation/skill synchronization.
-
 ## Alerts
 
 - Conservative medication-safety review alerts from existing vault reports and active medication/PGx findings are available through `fm-generate-medication-safety-alerts`.
 - Non-authoritative health advisory reports are available through `fm-generate-health-advisory`.
 - Dosing alerts, full interaction severity scoring, and clinical-grade genetic interpretation remain future scope.
 - Lab value out-of-range flags.
-- High-penetrance variant warnings, including ACMG secondary findings.
+- ClinVar genetic risk flags with zygosity (ADR-022).
 
 ## Required User Procedures
 

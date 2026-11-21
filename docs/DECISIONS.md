@@ -55,7 +55,7 @@ so this file never carries an overridden decision.
 ---
 
 ## ADR-001 AI Proposes, Deterministic Code Persists
-Status: accepted | Related REQs: REQ-001, REQ-002, REQ-003, REQ-005, REQ-019
+Status: accepted | Related REQs: REQ-001, REQ-002, REQ-003, REQ-005, REQ-019, REQ-023
 
 ### Context
 Messy medical documents cannot be normalized reliably by deterministic parsing
@@ -98,7 +98,7 @@ skill (ADR-013).
 ---
 
 ## ADR-003 Authority Hierarchy
-Status: accepted | Related REQs: REQ-004, REQ-005, REQ-006, REQ-023, REQ-024
+Status: accepted | Related REQs: REQ-001, REQ-004, REQ-005, REQ-006, REQ-023, REQ-024
 
 ### Decision
 
@@ -128,7 +128,7 @@ Non-interactive ambiguity is quarantined.
 ---
 
 ## ADR-004 User Corrections and Refutations
-Status: accepted | Related REQs: REQ-005, REQ-006, REQ-016, REQ-023
+Status: accepted | Related REQs: REQ-005, REQ-006, REQ-010, REQ-016, REQ-023
 
 ### Context
 A user who fixes a persisted fact must not have the fix undone by the next
@@ -199,7 +199,7 @@ Status: accepted | Related REQs: REQ-006, REQ-009, REQ-024
 ---
 
 ## ADR-006 Reversible Deduplication
-Status: accepted | Related REQs: REQ-003, REQ-004, REQ-006, REQ-008, REQ-009, REQ-023, REQ-024
+Status: accepted | Related REQs: REQ-001, REQ-003, REQ-004, REQ-006, REQ-008, REQ-009, REQ-023, REQ-024
 
 ### Decision
 - Deduplication is hybrid: deterministic pre-filter by person, category, date,
@@ -307,7 +307,7 @@ famed-vault/
 ---
 
 ## ADR-011 External Reference Data
-Status: accepted | Related REQs: REQ-003, REQ-011, REQ-021
+Status: accepted | Related REQs: REQ-003, REQ-011, REQ-017, REQ-021
 
 ### Decision
 - Public reference data is a rebuildable, untracked cache under
@@ -341,7 +341,7 @@ Status: accepted | Related REQs: REQ-018, REQ-019
 ---
 
 ## ADR-013 Skills-First AI Without a Provider Layer
-Status: accepted | Related REQs: REQ-001, REQ-002, REQ-015, REQ-019
+Status: accepted | Related REQs: REQ-001, REQ-002, REQ-010, REQ-015, REQ-019
 
 ### Decision
 - All AI-dependent product behavior is specified as business logic skills,
@@ -608,7 +608,7 @@ Status: accepted | Related REQs: REQ-011, REQ-016, REQ-021
 ---
 
 ## ADR-025 Derived-Report Dependency Graph
-Status: accepted | Related REQs: REQ-006, REQ-011, REQ-014, REQ-016
+Status: accepted | Related REQs: REQ-006, REQ-011, REQ-012, REQ-014, REQ-016, REQ-023
 
 ### Decision
 1. Producer/consumer relationships among derived outputs are declared in one
@@ -1135,7 +1135,7 @@ invisible. Persist-and-flag keeps both values visible with their sources.
 ---
 
 ## ADR-043 Pending-Review Reports
-Status: accepted | Related REQs: REQ-005, REQ-006, REQ-016, REQ-018
+Status: accepted | Related REQs: REQ-005, REQ-006, REQ-010, REQ-016, REQ-018
 
 ### Decision
 1. Each person gets `Records/<person_id>/Reports/pending-review.md`

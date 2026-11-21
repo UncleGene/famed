@@ -84,6 +84,7 @@ famed-vault/
     Medications/    source-evidence medication notes, dated updates + index
     History/        history review notes, dated updates, history-corrections.md
     Genes/          DNA source notes
+    Immunizations/  canonical immunization notes + index
     Insights/
     Reports/        derived reports, doctor-visit-packets/
 ```

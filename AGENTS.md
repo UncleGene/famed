@@ -88,7 +88,7 @@ this repo and should be supplied by the host agent environment.
 
 Storage and compatibility:
 
-- Business logic skills (`fm-*`, `data-contract-designer`, `ingestion-architect`) and nested Obsidian skills live under `.agents/skills/`. Generic development-process skills come from the host agent environment and are not stored here.
+- Business logic skills (`fm-*`), project/development design skills (`data-contract-designer`, `ingestion-architect`; developer-time design guidance, exempt from the `fm-` prefix and capability-level rules below), and nested Obsidian skills live under `.agents/skills/`. Generic development-process skills come from the host agent environment and are not stored here.
 - `.claude/skills` must remain a symbolic link to `../.agents/skills` so Claude consumes the same repo-local skill files instead of a fork.
 - `GEMINI.md` and `.gemini/` are adapter entrypoints for Gemini CLI and Gemini Code Assist. They must point back to `.agents/skills/` instead of duplicating skill bodies.
 - Do not create provider-specific skill copies for Codex, Claude, Gemini, GitHub Copilot, or later backends unless an adapter limitation makes that unavoidable and the fork is documented.
@@ -96,15 +96,15 @@ Storage and compatibility:
 Separation of concerns:
 
 - **Host-level process workflow** covers generic planning, validation, review, simplification, handoff, and implementation routing.
-- **Project/development skills tightly coupled to `famed`** may reference this repo's current docs, milestones, authority hierarchy, source/vault/DB storage model, and AI orchestration decisions.
-- **Business logic skills** encode domain behavior that could affect application semantics, prompts, schemas, validation, ingestion, or runtime AI behavior. Business logic skills must declare their minimum capability level by referencing the central model-capability matrix in `docs/references/model-capability-matrix.md`.
+- **Project/development skills tightly coupled to `famed`** (`data-contract-designer`, `ingestion-architect`) guide developers designing pipelines and contracts; they may reference this repo's current docs, milestones, authority hierarchy, source/vault/DB storage model, and AI orchestration decisions.
+- **Business logic skills** (`fm-*`) are workflows the product runs: domain behavior that could affect application semantics, prompts, schemas, validation, ingestion, or runtime AI behavior. Business logic skills must declare their minimum capability level by referencing the central model-capability matrix in `docs/references/model-capability-matrix.md`.
 
 Authoring rules:
 
 - Every skill body must use this section order: `# When to use`, `# Inputs`, `# Procedure`, `# Skeptic pass`, `# Output`, `# Hand-off`.
 - Skill bodies should reference the project guide for project-specific values (file paths, tool commands, domain rules), not embed them.
 - Do not use vendor-specific tool names (e.g. TaskCreate, ExitPlanMode, mcp__*) in skill bodies. Use neutral verbs.
-- When a skill affects production behavior or schema contracts, treat it as business logic: trace it to relevant requirements/decisions.
+- When a skill affects production behavior or schema contracts, trace it to relevant requirements/decisions.
 - Business logic skills must use the `fm-` prefix.
 
 ## Skill Prelude

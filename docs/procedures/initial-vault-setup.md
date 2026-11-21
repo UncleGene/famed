@@ -37,7 +37,7 @@ python scripts/setup.py
 - To check dependencies without changing the vault or database:
 
 ```bash
-python scripts/setup.py --check
+python scripts/setup.py --check            # on Linux add --skip-keychain
 ```
 
 - If keychain setup fails, rerun with:

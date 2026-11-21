@@ -82,7 +82,7 @@ are ignored. Notes link retained sources, never inbox, quarantine, tmp, or
 absolute paths. Zero duplicate canonical records on re-import. Zero confirmation
 steps for unambiguous files.
 
-**Links:** ADR-001, ADR-002, ADR-003, ADR-006, ADR-013, ADR-014, ADR-015, ADR-016, ADR-017, ADR-018, ADR-038, ADR-039
+**Links:** ADR-001, ADR-002, ADR-003, ADR-006, ADR-013, ADR-014, ADR-015, ADR-016, ADR-017, ADR-018, ADR-036, ADR-038, ADR-039
 
 ---
 
@@ -152,7 +152,7 @@ correction. Repairs are exact, idempotent, mirrored to vault cells, and audited.
 Audit findings cite both the local record and the external source, are never
 auto-applied, and use no identifying query text.
 
-**Links:** ADR-001, ADR-008, ADR-018, ADR-033, ADR-034, ADR-035, ADR-041 | REFERENCES: coding-standards.md
+**Links:** ADR-001, ADR-002, ADR-006, ADR-008, ADR-011, ADR-018, ADR-033, ADR-034, ADR-035, ADR-036, ADR-038, ADR-041 | REFERENCES: coding-standards.md
 
 ---
 
@@ -186,7 +186,7 @@ asked during an attended import, report-visible otherwise.
 and audited. When an exact lower-authority medication row exists and the user
 later records the same period, persistence converges on the `user_update` row.
 
-**Links:** ADR-003, ADR-006, ADR-018, ADR-042
+**Links:** ADR-002, ADR-003, ADR-006, ADR-017, ADR-018, ADR-038, ADR-042
 
 ---
 
@@ -214,7 +214,7 @@ One Human Resolver resolves ambiguity without having to maintain internal state.
 audited. Quarantine is a first-class outcome. The review set is derived from
 current evidence; resolved items leave it while their events remain.
 
-**Links:** ADR-001, ADR-003, ADR-039, ADR-042, ADR-043 | See also: REQ-023
+**Links:** ADR-001, ADR-002, ADR-003, ADR-004, ADR-035, ADR-039, ADR-042, ADR-043 | See also: REQ-023
 
 ---
 
@@ -251,7 +251,7 @@ the authoritative layer reproduces derived artifacts. Source-note identity does
 not depend on arrival order. A rebuild never mutates working storage, rolls back
 a failed source completely, and reports every source outcome.
 
-**Links:** ADR-003, ADR-005, ADR-008, ADR-009, ADR-010, ADR-017, ADR-025, ADR-038, ADR-039, ADR-040, ADR-043 | See also: REQ-023, REQ-024
+**Links:** ADR-003, ADR-004, ADR-005, ADR-006, ADR-008, ADR-009, ADR-010, ADR-017, ADR-025, ADR-035, ADR-036, ADR-038, ADR-039, ADR-040, ADR-041, ADR-042, ADR-043 | See also: REQ-023, REQ-024
 
 ---
 
@@ -315,7 +315,7 @@ Store, normalize, trend, and present lab results.
 visible. Operational metadata never appears as a lab fact anywhere. Textual
 results reach reports and FHIR `valueString`.
 
-**Links:** ADR-016, ADR-034, ADR-035, ADR-036, ADR-037, ADR-038, ADR-039 | REFERENCES: coding-standards.md | See also: REQ-025
+**Links:** ADR-006, ADR-008, ADR-016, ADR-030, ADR-034, ADR-035, ADR-036, ADR-037, ADR-038, ADR-039, ADR-040 | REFERENCES: coding-standards.md | See also: REQ-025
 
 ---
 
@@ -355,7 +355,7 @@ update existing notes and regenerate dependent reports. Safety alerts cite
 sources, show missing/stale/conflicting inputs, and include the
 professional-contact warning.
 
-**Links:** ADR-005, ADR-008, ADR-038, ADR-041, ADR-042 | See also: REQ-023, REQ-024
+**Links:** ADR-005, ADR-006, ADR-008, ADR-038, ADR-039, ADR-040, ADR-041, ADR-042 | See also: REQ-023, REQ-024
 
 ---
 
@@ -386,7 +386,7 @@ allergies, and other free-form history.
 appear as structured fields alongside the narrative. The summary refreshes on
 every history change, as does the pending-review report.
 
-**Links:** ADR-004, ADR-013, ADR-018, ADR-029, ADR-039, ADR-043
+**Links:** ADR-004, ADR-013, ADR-017, ADR-018, ADR-029, ADR-039, ADR-043
 
 ---
 
@@ -416,7 +416,7 @@ no partial writes.
 Failures roll back. Reports never expose bulk genotypes, weights, or source
 paths.
 
-**Links:** ADR-008, ADR-011, ADR-020, ADR-024, ADR-025, ADR-031 | REFERENCES: genomics-reference.md
+**Links:** ADR-008, ADR-011, ADR-020, ADR-024, ADR-025, ADR-031, ADR-036, ADR-040 | REFERENCES: genomics-reference.md
 
 ---
 
@@ -491,7 +491,7 @@ Missing disease identifier → default carrier-or-risk wording.
 gitignored. Every allele match is counted in exactly one disposition; excluded
 variants are never listed. Missing data reads as not evaluated, never as zero.
 
-**Links:** ADR-022, ADR-023, ADR-025, ADR-026, ADR-027, ADR-033 | REFERENCES: evidence-model.md
+**Links:** ADR-014, ADR-021, ADR-022, ADR-023, ADR-025, ADR-026, ADR-027, ADR-031, ADR-033 | REFERENCES: evidence-model.md
 
 ---
 
@@ -563,7 +563,7 @@ Packets label missing or unreviewed inputs. No report contains dosing advice,
 diagnoses, or bulk genotype data. No category handler ships without its refresh
 hook.
 
-**Links:** ADR-010, ADR-014, ADR-019, ADR-020, ADR-022, ADR-023, ADR-024, ADR-025, ADR-026, ADR-028, ADR-030, ADR-031, ADR-043 | REFERENCES: outputs-and-procedures.md
+**Links:** ADR-004, ADR-010, ADR-014, ADR-019, ADR-020, ADR-021, ADR-022, ADR-023, ADR-024, ADR-025, ADR-026, ADR-028, ADR-029, ADR-030, ADR-031, ADR-035, ADR-036, ADR-037, ADR-038, ADR-043 | REFERENCES: outputs-and-procedures.md
 
 ---
 
@@ -579,7 +579,7 @@ Status: active
 **Acceptance:** Operations stop on missing required dependencies; optional tools
 never block.
 
-**Links:** ADR-007, ADR-011
+**Links:** ADR-007, ADR-011, ADR-022
 
 ---
 
@@ -594,7 +594,7 @@ authoritative description of its mechanics; procedures link to it.
 **Acceptance:** A procedure exists for each user-facing workflow before it is
 considered complete.
 
-**Links:** ADR-012, ADR-015, ADR-043 | REFERENCES: outputs-and-procedures.md
+**Links:** ADR-012, ADR-014, ADR-015, ADR-043 | REFERENCES: outputs-and-procedures.md
 
 ---
 
@@ -614,7 +614,7 @@ Status: active
 **Acceptance:** One canonical copy of each skill. An attended skill run needs no
 configured model service.
 
-**Links:** ADR-012, ADR-013, ADR-015
+**Links:** ADR-001, ADR-007, ADR-012, ADR-013, ADR-015
 
 ---
 
@@ -714,7 +714,7 @@ A user's explicit correction outranks every later import of the same fact.
 revocation is audited. Correction and revocation are idempotent. Regenerated
 notes keep `source_type: user_correction`.
 
-**Links:** ADR-001, ADR-003, ADR-004, ADR-025 | See also: REQ-005, REQ-024
+**Links:** ADR-001, ADR-003, ADR-004, ADR-006, ADR-025, ADR-042 | See also: REQ-005, REQ-024
 
 ---
 
@@ -759,7 +759,7 @@ carry source-level authority.
 **Acceptance:** One note per person/date/category. Category-native front matter
 validates. Re-imports respect update authority. Relevant reports regenerate.
 
-**Links:** ADR-003, ADR-005 | See also: REQ-006, REQ-009, REQ-023
+**Links:** ADR-003, ADR-005, ADR-006, ADR-038, ADR-042 | See also: REQ-006, REQ-009, REQ-023
 
 ---
 

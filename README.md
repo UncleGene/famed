@@ -3,13 +3,14 @@
 **A local-first medical record for your family, kept in Obsidian and maintained
 by your AI coding agent.**
 
-famed turns the scattered paperwork of family health care (lab PDFs, portal
-exports, medication lists, visit summaries, consumer DNA files) into one
-organized, cross-linked record per person on your own computer. You drop files
-into a folder and ask your AI agent (Claude Code, Codex, Gemini CLI, and
-similar) to process them. The agent reads and interprets the documents; famed's
-deterministic code validates every fact before anything is saved; and you
-browse the result in [Obsidian](https://obsidian.md).
+famed (short for **fam**ily **med**ical) turns the scattered paperwork of
+family health care (lab PDFs, portal exports, medication lists, visit
+summaries, consumer DNA files) into one organized, cross-linked record per
+person on your own computer. You drop files into a folder and ask your AI
+agent (Claude Code, Codex, Gemini CLI, and similar) to process them. The agent
+reads and interprets the documents; famed's deterministic code validates every
+fact before anything is saved; and you browse the result in
+[Obsidian](https://obsidian.md).
 
 > [!WARNING]
 > famed is a personal organization tool, not medical software. It does not
@@ -118,7 +119,7 @@ python scripts/setup.py               # creates the vault, database, and folders
 All of these are git-ignored. Re-running setup only adds what is missing. On
 Linux, or to skip the macOS Keychain step, use
 `python scripts/setup.py --skip-keychain`. To check dependencies at any time:
-`python scripts/setup.py --check`.
+`python scripts/setup.py --check` (add `--skip-keychain` on Linux).
 
 Then open Obsidian, choose **Open folder as vault**, select `famed-vault/`, and
 enable the Dataview plugin.
@@ -239,7 +240,7 @@ History, Genes, and Reports.
 | A value is wrong | Use `fm-correct-fact`; never edit the database directly. |
 | A report looks stale | Run the report's skill again, or `fm-reprocess-source` on the source. |
 | Lab codes are missing | Install the LOINC files (see Reference data). |
-| Setup check fails | Run `python scripts/setup.py --check` and follow its remediation. |
+| Setup check fails | Run `python scripts/setup.py --check` (add `--skip-keychain` on Linux) and follow its remediation. |
 
 All caregiver procedures are in [docs/procedures/](docs/procedures/).
 

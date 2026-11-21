@@ -48,8 +48,7 @@ metadata:
 - Optional `person_id` to scope the audit to one person; omitted audits every
   person's current records.
 - Local repo with `famed-vault/` and the SQLite DB available.
-- Live web search/fetch tool access (host-provided; e.g. `WebSearch`/
-  `WebFetch` in Claude Code).
+- Live web search/fetch tool access (host-provided).
 
 # Procedure
 1. Enumerate the persisted coding/normalization facts in scope. For `labs`
